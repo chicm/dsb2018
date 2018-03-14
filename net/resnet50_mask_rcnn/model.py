@@ -47,10 +47,27 @@ class LateralBlock(nn.Module):
 
         return p
 
+class SELayer(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(SELayer, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+                nn.Linear(channel, channel // reduction),
+                nn.ReLU(inplace=True),
+                nn.Linear(channel // reduction, channel),
+                nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        return x * y
+
 ## C layers ## ---------------------------
-class BottleneckBlock(nn.Module):
-    def __init__(self, in_planes, planes, out_planes, is_downsample=False, stride=1):
-        super(BottleneckBlock, self).__init__()
+class SEBottleneckBlock(nn.Module):
+    def __init__(self, in_planes, planes, out_planes, is_downsample=False, stride=1, reduction=16):
+        super(SEBottleneckBlock, self).__init__()
         self.is_downsample = is_downsample
 
         self.bn1   = nn.BatchNorm2d(in_planes,eps = 2e-5)
@@ -59,7 +76,7 @@ class BottleneckBlock(nn.Module):
         self.conv2 = nn.Conv2d(   planes,     planes, kernel_size=3, padding=1, stride=stride, bias=False)
         self.bn3   = nn.BatchNorm2d(planes,eps = 2e-5)
         self.conv3 = nn.Conv2d(   planes, out_planes, kernel_size=1, padding=0, stride=1, bias=False)
-
+        self.se = SELayer(planes*4, reduction)
         if is_downsample:
             self.downsample = nn.Conv2d(in_planes, out_planes, kernel_size=1, padding=0, stride=stride, bias=False)
 
@@ -72,6 +89,7 @@ class BottleneckBlock(nn.Module):
         z = self.conv2(z)
         z = F.relu(self.bn3(z),inplace=True)
         z = self.conv3(z)
+        z = self.se(z)
 
         if self.is_downsample:
             z += self.downsample(x)
@@ -94,9 +112,9 @@ def make_layer_c0(in_planes, out_planes):
 
 def make_layer_c(in_planes, planes, out_planes, num_blocks, stride):
     layers = []
-    layers.append(BottleneckBlock(in_planes, planes, out_planes, is_downsample=True, stride=stride))
+    layers.append(SEBottleneckBlock(in_planes, planes, out_planes, is_downsample=True, stride=stride))
     for i in range(1, num_blocks):
-        layers.append(BottleneckBlock(out_planes, planes, out_planes))
+        layers.append(SEBottleneckBlock(out_planes, planes, out_planes))
 
     return nn.Sequential(*layers)
 
