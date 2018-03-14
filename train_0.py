@@ -107,7 +107,7 @@ def evaluate( net, test_loader ):
 #--------------------------------------------------------------
 def run_train():
 
-    out_dir  = RESULTS_DIR + '/color' #'/mask-rcnn-50-gray500-02'
+    out_dir  = RESULTS_DIR + '/se_gray' #'/mask-rcnn-50-gray500-02'
     initial_checkpoint = None
     #RESULTS_DIR + '/mask-rcnn-50-gray500-02/checkpoint/00014500_model.pth'
         ##
@@ -188,8 +188,8 @@ def run_train():
     log.write('** dataset setting **\n')
 
     train_dataset = ScienceDataset(
-                            'train_color_113', mode='train',
-                            #'train1_ids_gray2_500', mode='train',
+                            #'train_color_113', mode='train',
+                            'train1_ids_gray2_500', mode='train',
                             #'debug1_ids_gray_only_10', mode='train',
                             #'disk0_ids_dummy_9', mode='train', #12
                             #'train1_ids_purple_only1_101', mode='train', #12
@@ -207,8 +207,8 @@ def run_train():
 
 
     valid_dataset = ScienceDataset(
-                            'valid_color_15', mode='train',
-                            #'valid1_ids_gray2_43', mode='train',
+                            #'valid_color_15', mode='train',
+                            'valid1_ids_gray2_43', mode='train',
                             #'debug1_ids_gray_only_10', mode='train',
                             #'disk0_ids_dummy_9', mode='train',
                             #'train1_ids_purple_only1_101', mode='train', #12
