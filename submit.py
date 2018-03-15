@@ -135,13 +135,13 @@ def submit_collate(batch):
 
 
 #--------------------------------------------------------------
-def run_submit():
+def run_submit(initial_checkpoint, out_dir, split='test1_ids_gray2_53'):
 
 
 
-    out_dir  = RESULTS_DIR + '/mask-rcnn-50-gray500-02'
-    initial_checkpoint = \
-        RESULTS_DIR + '/mask-rcnn-50-gray500-02/checkpoint/00016500_model.pth'
+    #out_dir  = RESULTS_DIR + '/mask-rcnn-50-gray500-02'
+    #initial_checkpoint = \
+    #    RESULTS_DIR + '/mask-rcnn-50-gray500-02/checkpoint/00016500_model.pth'
         ##
 
     ## setup  ---------------------------
@@ -149,7 +149,7 @@ def run_submit():
     os.makedirs(out_dir +'/submit/npys', exist_ok=True)
     os.makedirs(out_dir +'/checkpoint', exist_ok=True)
     os.makedirs(out_dir +'/backup', exist_ok=True)
-    backup_project_as_zip(PROJECT_PATH, out_dir +'/backup/code.%s.zip'%IDENTIFIER)
+    #backup_project_as_zip(PROJECT_PATH, out_dir +'/backup/code.%s.zip'%IDENTIFIER)
 
     log = Logger()
     log.open(out_dir+'/log.evaluate.txt',mode='a')
@@ -183,7 +183,7 @@ def run_submit():
                                 #'valid1_ids_gray_only1_43', mode='test',
                                 #'debug1_ids_gray_only_10', mode='test',
                                 #'test1_ids_gray2_53', mode='test',
-                                'test1_ids_all_65', mode='test',
+                                split, mode='test',
                                 transform = submit_augment)
     test_loader  = DataLoader(
                         test_dataset,
@@ -312,16 +312,16 @@ def shrink_by_one(multi_mask):
     return multi_mask1
 
 
-def run_npy_to_sumbit_csv():
+def run_npy_to_sumbit_csv(submit_dir, submit_file, append_all_id=False):
 
     image_dir   = '/home/chicm/ml/kaggle/dsb2018/data/image/stage1_test/images'
 
-    submit_dir  = \
-        '/home/chicm/ml/kaggle/dsb2018/results/mask-rcnn-50-gray500-02/submit'
+    #submit_dir  = \
+    #    '/home/chicm/ml/kaggle/dsb2018/results/mask-rcnn-50-gray500-02/submit'
 
 
     npy_dir = submit_dir  + '/npys'
-    csv_file = submit_dir + '/submission-65.csv'
+    csv_file = submit_dir + '/' + submit_file
 
     ## start -----------------------------
     all_num=0
@@ -362,24 +362,33 @@ def run_npy_to_sumbit_csv():
     # submission csv  ----------------------------
 
     # kaggle submission requires all test image to be listed!
-    for t in ALL_TEST_IMAGE_ID:
-        cvs_ImageId.append(t)
-        cvs_EncodedPixels.append('') #null
+    if append_all_id:
+        for t in ALL_TEST_IMAGE_ID:
+            cvs_ImageId.append(t)
+            cvs_EncodedPixels.append('') #null
 
 
     df = pd.DataFrame({ 'ImageId' : cvs_ImageId , 'EncodedPixels' : cvs_EncodedPixels})
     df.to_csv(csv_file, index=False, columns=['ImageId', 'EncodedPixels'])
 
 
+def submit_gray():
+    out_dir = RESULTS_DIR + '/se_gray'
+    checkpoint = RESULTS_DIR + '/se_gray/checkpoint/00021500_model.pth'
+    run_submit(checkpoint, out_dir, 'test1_ids_gray2_53')
+    run_npy_to_sumbit_csv(out_dir+'/submit', 'sub_segray1.csv', False)
 
-
+def submit_color():
+    out_dir = RESULTS_DIR + '/se_color'
+    checkpoint = RESULTS_DIR + '/se_color/checkpoint/00006000_model.pth'
+    run_submit(checkpoint, out_dir, 'test1_color_12')
+    run_npy_to_sumbit_csv(out_dir+'/submit', 'secolor1.csv', False)
 
 # main #################################################################
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-
-    run_submit()
-    run_npy_to_sumbit_csv()
+    #submit_gray()
+    submit_color()
 
     print('\nsucess!')
