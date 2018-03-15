@@ -105,10 +105,10 @@ def evaluate( net, test_loader ):
 
 
 #--------------------------------------------------------------
-def run_train():
+def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = None):
 
-    out_dir  = RESULTS_DIR + '/se_gray' #'/mask-rcnn-50-gray500-02'
-    initial_checkpoint = None
+    #out_dir  = RESULTS_DIR + '/se_gray' #'/mask-rcnn-50-gray500-02'
+    #initial_checkpoint = None
     #RESULTS_DIR + '/mask-rcnn-50-gray500-02/checkpoint/00014500_model.pth'
         ##
 
@@ -168,7 +168,8 @@ def run_train():
                    + list(range(0,num_iters,500))#1*1000
 
 
-    LR = None  #LR = StepLR([ (0, 0.01),  (200, 0.001),  (300, -1)])
+    #LR = None  
+    LR = StepLR([ (0, 0.01), (1000, 0.002), (5000, 0.001), (10000, 0.0001),  (30000, -1)])
     optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()),
                           lr=0.01/iter_accum, momentum=0.9, weight_decay=0.0001)
 
@@ -189,7 +190,7 @@ def run_train():
 
     train_dataset = ScienceDataset(
                             #'train_color_113', mode='train',
-                            'train1_ids_gray2_500', mode='train',
+                            train_split, mode='train',
                             #'debug1_ids_gray_only_10', mode='train',
                             #'disk0_ids_dummy_9', mode='train', #12
                             #'train1_ids_purple_only1_101', mode='train', #12
@@ -208,7 +209,7 @@ def run_train():
 
     valid_dataset = ScienceDataset(
                             #'valid_color_15', mode='train',
-                            'valid1_ids_gray2_43', mode='train',
+                            val_split, mode='train',
                             #'debug1_ids_gray_only_10', mode='train',
                             #'disk0_ids_dummy_9', mode='train',
                             #'train1_ids_purple_only1_101', mode='train', #12
@@ -508,12 +509,18 @@ def run_train():
     log.write('\n')
 
 
+def train_gray():
+    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = RESULTS_DIR+'/se_gray/checkpoint/00024500_model.pth')
+
+def train_color():
+    run_train(train_split = 'train_color_113', val_split = 'valid_color_15', out_dir = RESULTS_DIR + '/se_color', initial_checkpoint = RESULTS_DIR + '/se_color/checkpoint/00001500_model.pth')
 
 # main #################################################################
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    run_train()
+    #train_gray()
+    train_color()
 
     print('\nsucess!')
 
