@@ -376,19 +376,19 @@ def submit_gray():
     out_dir = RESULTS_DIR + '/se_gray'
     checkpoint = RESULTS_DIR + '/se_gray/checkpoint/00021500_model.pth'
     run_submit(checkpoint, out_dir, 'test1_ids_gray2_53')
-    run_npy_to_sumbit_csv(out_dir+'/submit', 'sub_segray1.csv', False)
+    run_npy_to_sumbit_csv(out_dir+'/submit', 'gray_21500.csv', False)
 
 def submit_color():
     out_dir = RESULTS_DIR + '/se_color'
-    checkpoint = RESULTS_DIR + '/se_color/checkpoint/00006000_model.pth'
+    checkpoint = RESULTS_DIR + '/se_color/checkpoint/00019500_model.pth'
     run_submit(checkpoint, out_dir, 'test1_color_12')
-    run_npy_to_sumbit_csv(out_dir+'/submit', 'secolor1.csv', False)
+    run_npy_to_sumbit_csv(out_dir+'/submit', 'secolor2.csv', False)
 
 # main #################################################################
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    #submit_gray()
-    submit_color()
+    submit_gray()
+    #submit_color()
 
     print('\nsucess!')

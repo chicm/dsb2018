@@ -169,7 +169,7 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
 
 
     #LR = None  
-    LR = StepLR([ (0, 0.01), (1000, 0.002), (5000, 0.001), (10000, 0.0001),  (30000, -1)])
+    LR = StepLR([ (0, 0.01), (1000, 0.002), (5000, 0.001), (10000, 0.001),  (30000, -1)])
     optimizer = optim.SGD(filter(lambda p: p.requires_grad, net.parameters()),
                           lr=0.01/iter_accum, momentum=0.9, weight_decay=0.0001)
 
@@ -289,6 +289,7 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
     batch_loss  = np.zeros(6,np.float32)
     batch_acc   = 0.0
     rate = 0
+    min_val_loss = 1000.0
 
     start = timer()
     j = 0
@@ -325,14 +326,18 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
                          time_to_str((timer() - start)/60)))
                 time.sleep(0.01)
 
+                if valid_loss[0] < min_val_loss:
+                    min_val_loss = valid_loss[0]
+                    torch.save(net.state_dict(),out_dir +'/checkpoint/best_model.pth')
+
             #if 1:
             if i in iter_save:
-                torch.save(net.state_dict(),out_dir +'/checkpoint/%08d_model.pth'%(i))
+                torch.save(net.state_dict(),out_dir +'/checkpoint/%08d_%0.4f_model.pth'%(i, valid_loss[0]))
                 torch.save({
                     'optimizer': optimizer.state_dict(),
                     'iter'     : i,
                     'epoch'    : epoch,
-                }, out_dir +'/checkpoint/%08d_optimizer.pth'%(i))
+                }, out_dir +'/checkpoint/%08d_%0.4f_optimizer.pth'%(i, valid_loss[0]))
                 with open(out_dir +'/checkpoint/configuration.pkl', 'wb') as pickle_file:
                     pickle.dump(cfg, pickle_file, pickle.HIGHEST_PROTOCOL)
 
@@ -510,17 +515,17 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
 
 
 def train_gray():
-    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = RESULTS_DIR+'/se_gray/checkpoint/00024500_model.pth')
+    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = RESULTS_DIR+'/se_gray/checkpoint/00021500_model.pth')
 
 def train_color():
-    run_train(train_split = 'train_color_113', val_split = 'valid_color_15', out_dir = RESULTS_DIR + '/se_color', initial_checkpoint = RESULTS_DIR + '/se_color/checkpoint/00001500_model.pth')
+    run_train(train_split = 'train_color_113', val_split = 'valid_color_15', out_dir = RESULTS_DIR + '/se_color', initial_checkpoint = RESULTS_DIR + '/se_color/checkpoint/00006000_model.pth')
 
 # main #################################################################
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    #train_gray()
-    train_color()
+    train_gray()
+    #train_color()
 
     print('\nsucess!')
 
