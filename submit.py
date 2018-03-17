@@ -143,12 +143,13 @@ def run_submit(initial_checkpoint, out_dir, split='test1_ids_gray2_53'):
     #initial_checkpoint = \
     #    RESULTS_DIR + '/mask-rcnn-50-gray500-02/checkpoint/00016500_model.pth'
         ##
+    chk_name = initial_checkpoint.split('/')[-1].split('.')[0].split('_')[0]
 
     ## setup  ---------------------------
-    os.makedirs(out_dir +'/submit/overlays', exist_ok=True)
-    os.makedirs(out_dir +'/submit/npys', exist_ok=True)
-    os.makedirs(out_dir +'/checkpoint', exist_ok=True)
-    os.makedirs(out_dir +'/backup', exist_ok=True)
+    os.makedirs(out_dir +'/overlays/'+chk_name, exist_ok=True)
+    os.makedirs(out_dir +'/npys/'+chk_name, exist_ok=True)
+    #os.makedirs(out_dir +'/checkpoint', exist_ok=True)
+    #os.makedirs(out_dir +'/backup', exist_ok=True)
     #backup_project_as_zip(PROJECT_PATH, out_dir +'/backup/code.%s.zip'%IDENTIFIER)
 
     log = Logger()
@@ -252,16 +253,16 @@ def run_submit(initial_checkpoint, out_dir, split='test1_ids_gray2_53'):
             id = test_dataset.ids[indices[b]]
             name =id.split('/')[-1]
 
-            #draw_shadow_text(overlay_mask, 'mask',  (5,15),0.5, (255,255,255), 1)
-            np.save(out_dir +'/submit/npys/%s.npy'%(name),mask)
+            #draw_shadow_text(overlay_mask, 'mask',  (5,15),0.5, (255,255,255), 1) 
+            np.save(out_dir +'/npys/%s/%s.npy'%(chk_name, name),mask)
             #cv2.imwrite(out_dir +'/submit/npys/%s.png'%(name),color_overlay)
-            cv2.imwrite(out_dir +'/submit/overlays/%s.png'%(name),all)
+            cv2.imwrite(out_dir +'/overlays/%s/%s.png'%(chk_name, name),all)
 
             #psd
-            os.makedirs(out_dir +'/submit/psds/%s'%name, exist_ok=True)
-            cv2.imwrite(out_dir +'/submit/psds/%s/%s.png'%(name,name),image)
-            cv2.imwrite(out_dir +'/submit/psds/%s/%s.mask.png'%(name,name),color_overlay)
-            cv2.imwrite(out_dir +'/submit/psds/%s/%s.contour.png'%(name,name),contour_overlay)
+            os.makedirs(out_dir +'/psds/%s/%s'%(chk_name,name), exist_ok=True)
+            cv2.imwrite(out_dir +'/psds/%s/%s/%s.png'%(chk_name,name,name),image)
+            cv2.imwrite(out_dir +'/psds/%s/%s/%s.mask.png'%(chk_name,name,name),color_overlay)
+            cv2.imwrite(out_dir +'/psds/%s/%s/%s.contour.png'%(chk_name,name,name),contour_overlay)
 
 
 
@@ -347,7 +348,7 @@ def run_npy_to_sumbit_csv(submit_dir, submit_file, append_all_id=False):
         all_num += num
 
         #<debug> ------------------------------------
-        print(all_num, num)  ##GT is 4152?
+        #print(all_num, num)  ##GT is 4152?
         image_file = image_dir +'/%s.png'%name
         image = cv2.imread(image_file)
         color_overlay   = multi_mask_to_color_overlay(multi_mask)
@@ -371,24 +372,68 @@ def run_npy_to_sumbit_csv(submit_dir, submit_file, append_all_id=False):
     df = pd.DataFrame({ 'ImageId' : cvs_ImageId , 'EncodedPixels' : cvs_EncodedPixels})
     df.to_csv(csv_file, index=False, columns=['ImageId', 'EncodedPixels'])
 
+def ensemble_npy_to_csv(npy_dirs, csv_file):
+    image_dir   = '/home/chicm/ml/kaggle/dsb2018/data/image/stage1_test/images'
+
+    npy_files = glob.glob(npy_dirs[0] + '/*.npy')
+    npy_files = [f.split('/')[-1] for f in npy_files]
+
+    ## start -----------------------------
+    all_num=0
+    cvs_ImageId = [];
+    cvs_EncodedPixels = [];
+
+    for npy_file in npy_files:
+        name = npy_file.split('/')[-1].replace('.npy','')
+        multi_mask = np.mean([np.load(pathname+'/'+npy_file) for pathname in npy_dirs ], axis=0)
+                #<todo> ---------------------------------
+        #post process here
+        multi_mask = filter_small(multi_mask, 8)
+        print(multi_mask.shape)
+        #<todo> ---------------------------------
+
+        num = int( multi_mask.max())
+        for m in range(num):
+            rle = run_length_encode(multi_mask==m+1)
+            cvs_ImageId.append(name)
+            cvs_EncodedPixels.append(rle)
+        all_num += num
+
+        #<debug> ------------------------------------
+        #print(all_num, num)  ##GT is 4152?
+        image_file = image_dir +'/%s.png'%name
+        image = cv2.imread(image_file)
+        color_overlay   = multi_mask_to_color_overlay(multi_mask)
+        color1_overlay  = multi_mask_to_contour_overlay(multi_mask, color_overlay)
+        contour_overlay = multi_mask_to_contour_overlay(multi_mask, image, [0,255,0])
+        all = np.hstack((image, contour_overlay, color1_overlay)).astype(np.uint8)
+        #image_show('all',all)
+        #cv2.waitKey(1)
+    df = pd.DataFrame({ 'ImageId' : cvs_ImageId , 'EncodedPixels' : cvs_EncodedPixels})
+    df.to_csv(csv_file, index=False, columns=['ImageId', 'EncodedPixels'])
+
 
 def submit_gray():
     out_dir = RESULTS_DIR + '/se_gray'
-    checkpoint = RESULTS_DIR + '/se_gray/checkpoint/00021500_model.pth'
+    checkpoint = RESULTS_DIR + '/se_gray/checkpoint/00023000_0.3847_model.pth'
     run_submit(checkpoint, out_dir, 'test1_ids_gray2_53')
-    run_npy_to_sumbit_csv(out_dir+'/submit', 'gray_21500.csv', False)
+    #run_npy_to_sumbit_csv(out_dir+'/submit', 'gray_21500.csv', False)
+    
 
 def submit_color():
     out_dir = RESULTS_DIR + '/se_color'
     checkpoint = RESULTS_DIR + '/se_color/checkpoint/00019500_model.pth'
     run_submit(checkpoint, out_dir, 'test1_color_12')
-    run_npy_to_sumbit_csv(out_dir+'/submit', 'secolor2.csv', False)
+    #run_npy_to_sumbit_csv(out_dir+'/submit', 'secolor2.csv', False)
 
 # main #################################################################
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    submit_gray()
+    #submit_gray()
     #submit_color()
+    #run_npy_to_sumbit_csv(RESULTS_DIR + '/se_gray/submit', 'test1.csv', False)
+    ensemble_npy_to_csv([RESULTS_DIR + '/se_gray/npys/00021500', RESULTS_DIR + '/se_gray/npys/00022500', RESULTS_DIR + '/se_gray/npys/00023000'], 
+        RESULTS_DIR+'/se_gray/submit/ensemble.csv')
 
     print('\nsucess!')

@@ -515,7 +515,7 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
 
 
 def train_gray():
-    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = RESULTS_DIR+'/se_gray/checkpoint/00021500_model.pth')
+    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = RESULTS_DIR+'/se_gray/checkpoint/00022500_0.3767_model.pth')
 
 def train_color():
     run_train(train_split = 'train_color_113', val_split = 'valid_color_15', out_dir = RESULTS_DIR + '/se_color', initial_checkpoint = RESULTS_DIR + '/se_color/checkpoint/00006000_model.pth')
