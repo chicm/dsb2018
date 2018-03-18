@@ -368,7 +368,7 @@ class MaskRcnnNet(nn.Module):
 
         feature_channels = 128
         crop_channels = feature_channels
-        self.feature_net = FeatureNet(cfg, 3, feature_channels)
+        self.feature_net = FeatureNet(cfg, 1, feature_channels)
         self.rpn_head    = RpnMultiHead(cfg,feature_channels)
         self.rcnn_crop   = CropRoi  (cfg, cfg.rcnn_crop_size)
         self.rcnn_head   = RcnnHead (cfg, crop_channels)

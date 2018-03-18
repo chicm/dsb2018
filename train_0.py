@@ -19,11 +19,9 @@ from net.resnet50_mask_rcnn.model import *
 
 
 def train_augment(image, multi_mask, meta, index):
-
     image, multi_mask = random_shift_scale_rotate_transform2( image, multi_mask,
                         shift_limit=[0,0], scale_limit=[1/2,2],
                         rotate_limit=[-45,45], borderMode=cv2.BORDER_REFLECT_101, u=0.5) #borderMode=cv2.BORDER_CONSTANT
-
     # overlay = multi_mask_to_color_overlay(multi_mask,color='cool')
     # overlay1 = multi_mask_to_color_overlay(multi_mask1,color='cool')
     # image_show('overlay',overlay)
@@ -38,7 +36,7 @@ def train_augment(image, multi_mask, meta, index):
     ##image,  multi_mask = fix_crop_transform2(image, multi_mask, -1,-1,WIDTH, HEIGHT)
 
     #---------------------------------------
-    input = torch.from_numpy(image.transpose((2,0,1))).float().div(255)
+    input = torch.from_numpy(image).float().div(255)
     box, label, instance  = multi_mask_to_annotation(multi_mask)
 
     return input, box, label, instance, meta, index
@@ -49,7 +47,7 @@ def valid_augment(image, multi_mask, meta, index):
     image,  multi_mask = fix_crop_transform2(image, multi_mask, -1,-1,WIDTH, HEIGHT)
 
     #---------------------------------------
-    input = torch.from_numpy(image.transpose((2,0,1))).float().div(255)
+    input = torch.from_numpy(image).float().div(255)
     box, label, instance  = multi_mask_to_annotation(multi_mask)
 
     return input, box, label, instance, meta, index
@@ -77,7 +75,7 @@ def evaluate( net, test_loader ):
     test_loss = np.zeros(6,np.float32)
     test_acc  = 0
     for i, (inputs, truth_boxes, truth_labels, truth_instances, metas, indices) in enumerate(test_loader, 0):
-
+        inputs = inputs.unsqueeze(1)
         with torch.no_grad():
             inputs = Variable(inputs).cuda()
             net(inputs, truth_boxes,  truth_labels, truth_instances )
@@ -240,7 +238,7 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
     #<debug>========================================================================================
     if 0:
         for inputs, truth_boxes, truth_labels, truth_instances, metas, indices in valid_loader:
-
+            inputs = inputs.unsqueeze(1)
             batch_size, C,H,W = inputs.size()
             print('batch_size=%d'%batch_size)
 
@@ -350,6 +348,7 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
 
 
             # one iteration update  -------------
+            inputs = inputs.unsqueeze(1)
             inputs = Variable(inputs).cuda()
             net( inputs, truth_boxes, truth_labels, truth_instances )
             loss = net.loss( inputs, truth_boxes, truth_labels, truth_instances )
@@ -392,7 +391,7 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
             j=j+1
 
             #<debug> ===================================================================
-            if 1:
+            if 0:
             #if i%10==0:
 
                 net.set_mode('test')
@@ -513,9 +512,15 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
 
     log.write('\n')
 
+def train_all():
+    chk = None
+    #chk = RESULTS_DIR+'/se_gray/checkpoint/00022500_0.3767_model.pth'
+    run_train(train_split = 'train_mix_620', val_split = 'valid_mix_50', out_dir = RESULTS_DIR + '/cvt_gray', initial_checkpoint = chk)
 
 def train_gray():
-    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = RESULTS_DIR+'/se_gray/checkpoint/00022500_0.3767_model.pth')
+    chk = None
+    #chk = RESULTS_DIR+'/se_gray/checkpoint/00022500_0.3767_model.pth'
+    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = chk)
 
 def train_color():
     run_train(train_split = 'train_color_113', val_split = 'valid_color_15', out_dir = RESULTS_DIR + '/se_color', initial_checkpoint = RESULTS_DIR + '/se_color/checkpoint/00006000_model.pth')
@@ -524,7 +529,7 @@ def train_color():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    train_gray()
+    train_all()
     #train_color()
 
     print('\nsucess!')

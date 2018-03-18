@@ -41,7 +41,8 @@ class ScienceDataset(Dataset):
         id = self.ids[index]
         name   = id.split('/')[-1]
         folder = id.split('/')[0]
-        image = cv2.imread(DATA_DIR + '/image/%s/images/%s.png'%(folder,name), cv2.IMREAD_COLOR)
+        image = cv2.imread(DATA_DIR + '/image/%s/images/%s.png'%(folder,name), 0)
+        #image = np.expand_dims(image, axis=-1)
 
         if self.mode in ['train']:
             multi_mask = np.load( DATA_DIR + '/image/%s/multi_masks/%s.npy'%(folder,name)).astype(np.int32)
@@ -97,7 +98,7 @@ def multi_mask_to_color_overlay(multi_mask, image=None, color=None):
 
 
 
-def multi_mask_to_contour_overlay(multi_mask, image=None, color=[255,255,255]):
+def multi_mask_to_contour_overlay(multi_mask, image=None, color=[0]):
 
     height,width = multi_mask.shape[:2]
     overlay = np.zeros((height,width,3),np.uint8) if image is None else image.copy()
@@ -313,25 +314,29 @@ def run_check_dataset_reader():
         print('n=%d------------------------------------------'%n)
         print('meta : ', meta)
 
-        contour_overlay = multi_mask_to_contour_overlay(multi_mask,image,color=[0,0,255])
-        color_overlay   =   multi_mask_to_color_overlay(multi_mask)
-        image_show('image',np.hstack([image,color_overlay,contour_overlay]))
+        contour_overlay = multi_mask_to_contour_overlay(multi_mask,image,color=[255])
+        #color_overlay   =   multi_mask_to_color_overlay(multi_mask)
+        print(image.shape,  contour_overlay.shape)
+        image_show('image',np.hstack([image,contour_overlay]))
 
         num_masks  = len(instance)
         for i in range(num_masks):
             x0,y0,x1,y1 = box[i]
             print('label[i], box[i] : ', label[i], box[i])
 
-            instance1 = cv2.cvtColor((instance[i]*255).astype(np.uint8),cv2.COLOR_GRAY2BGR)
+            #instance1 = cv2.cvtColor((instance[i]*255).astype(np.uint8),cv2.COLOR_GRAY2BGR)
+            instance1 = (instance[i]*255).astype(np.uint8)
+            print(np.max(instance[i]))
             image1           = image.copy()
-            color_overlay1   = color_overlay.copy()
+            #color_overlay1   = color_overlay.copy()
             contour_overlay1 = contour_overlay.copy()
 
-            cv2.rectangle(instance1,(x0,y0),(x1,y1),(0,255,255),2)
-            cv2.rectangle(image1,(x0,y0),(x1,y1),(0,255,255),2)
-            cv2.rectangle(color_overlay1,(x0,y0),(x1,y1),(0,255,255),2)
-            cv2.rectangle(contour_overlay1,(x0,y0),(x1,y1),(0,255,255),2)
-            image_show('instance[i]',np.hstack([instance1, image1,color_overlay1,contour_overlay1]))
+            cv2.rectangle(instance[i],(x0,y0),(x1,y1),(255),2)
+            cv2.rectangle(image1,(x0,y0),(x1,y1),(255),2)
+            #cv2.rectangle(color_overlay1,(x0,y0),(x1,y1),(0,255,255),2)
+            cv2.rectangle(contour_overlay1,(x0,y0),(x1,y1),(255),2)
+            print(instance[i].shape)
+            image_show('instance[i]',np.hstack([instance1, image1,contour_overlay1]))
             cv2.waitKey(0)
 
 
