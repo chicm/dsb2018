@@ -519,8 +519,9 @@ def train_all():
 
 def train_gray():
     chk = None
+    chk = RESULTS_DIR+'/cvt_gray/checkpoint/00014000_0.5118_model.pth'
     #chk = RESULTS_DIR+'/se_gray/checkpoint/00022500_0.3767_model.pth'
-    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/se_gray', initial_checkpoint = chk)
+    run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray2_43', out_dir = RESULTS_DIR + '/cvt_gray', initial_checkpoint = chk)
 
 def train_color():
     run_train(train_split = 'train_color_113', val_split = 'valid_color_15', out_dir = RESULTS_DIR + '/se_color', initial_checkpoint = RESULTS_DIR + '/se_color/checkpoint/00006000_model.pth')
@@ -529,7 +530,8 @@ def train_color():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    train_all()
+    train_gray()
+    #train_all()
     #train_color()
 
     print('\nsucess!')

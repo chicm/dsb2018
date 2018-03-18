@@ -119,7 +119,7 @@ def revert(net, images):
 #-----------------------------------------------------------------------------------
 def submit_augment(image, index):
     pad_image = pad_to_factor(image, factor=16)
-    input = torch.from_numpy(pad_image.transpose((2,0,1))).float().div(255)
+    input = torch.from_numpy(pad_image).float().div(255)
     return input, image, index
 
 
@@ -210,7 +210,7 @@ def run_submit(initial_checkpoint, out_dir, split='test1_ids_gray2_53'):
 
     test_num  = len(test_loader.dataset)
     for i, (inputs, images, indices) in enumerate(test_loader, 0):
-
+        inputs = inputs.unsqueeze(1)
         print('\rpredicting: %10d/%d (%0.0f %%)  %0.2f min'%(i, test_num-1, 100*i/(test_num-1),
                          (timer() - start) / 60), end='',flush=True)
         time.sleep(0.01)
@@ -243,11 +243,11 @@ def run_submit(initial_checkpoint, out_dir, split='test1_ids_gray2_53'):
             image  = images[b]
             mask   = masks[b]
 
-            contour_overlay  = multi_mask_to_contour_overlay(mask, image, color=[0,255,0])
+            contour_overlay  = multi_mask_to_contour_overlay(mask, image, color=[255])
             color_overlay    = multi_mask_to_color_overlay(mask, color='summer')
-            color1_overlay   = multi_mask_to_contour_overlay(mask, color_overlay, color=[255,255,255])
-
-            all = np.hstack((image,contour_overlay,color1_overlay))
+            color1_overlay   = multi_mask_to_contour_overlay(mask, color_overlay, color=[255])
+            #print(image.shape, contour_overlay.shape, color1_overlay.shape)
+            #all = np.hstack((image,contour_overlay,color1_overlay))
 
             # --------------------------------------------
             id = test_dataset.ids[indices[b]]
@@ -256,7 +256,7 @@ def run_submit(initial_checkpoint, out_dir, split='test1_ids_gray2_53'):
             #draw_shadow_text(overlay_mask, 'mask',  (5,15),0.5, (255,255,255), 1) 
             np.save(out_dir +'/npys/%s/%s.npy'%(chk_name, name),mask)
             #cv2.imwrite(out_dir +'/submit/npys/%s.png'%(name),color_overlay)
-            cv2.imwrite(out_dir +'/overlays/%s/%s.png'%(chk_name, name),all)
+            #cv2.imwrite(out_dir +'/overlays/%s/%s.png'%(chk_name, name),all)
 
             #psd
             os.makedirs(out_dir +'/psds/%s/%s'%(chk_name,name), exist_ok=True)
@@ -414,9 +414,9 @@ def ensemble_npy_to_csv(npy_dirs, csv_file):
 
 
 def submit_gray():
-    out_dir = RESULTS_DIR + '/se_gray'
-    checkpoint = RESULTS_DIR + '/se_gray/checkpoint/00023000_0.3847_model.pth'
-    run_submit(checkpoint, out_dir, 'test1_ids_gray2_53')
+    out_dir = RESULTS_DIR + '/cvt_gray'
+    checkpoint = RESULTS_DIR + '/cvt_gray/checkpoint/best_model.pth'
+    run_submit(checkpoint, out_dir, 'test1_ids_gray2_53') #  'test1_ids_all_65')
     #run_npy_to_sumbit_csv(out_dir+'/submit', 'gray_21500.csv', False)
     
 
@@ -430,10 +430,10 @@ def submit_color():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    #submit_gray()
+    submit_gray()
     #submit_color()
     #run_npy_to_sumbit_csv(RESULTS_DIR + '/se_gray/submit', 'test1.csv', False)
-    ensemble_npy_to_csv([RESULTS_DIR + '/se_gray/npys/00021500', RESULTS_DIR + '/se_gray/npys/00022500', RESULTS_DIR + '/se_gray/npys/00023000'], 
-        RESULTS_DIR+'/se_gray/submit/ensemble.csv')
+    ensemble_npy_to_csv([RESULTS_DIR + '/cvt_gray/npys/best'], 
+        RESULTS_DIR+'/cvt_gray/submit/sub2_cvtgray.csv')
 
     print('\nsucess!')
