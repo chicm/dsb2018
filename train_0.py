@@ -344,8 +344,8 @@ def run_train(train_split = 'train1_ids_gray2_500', val_split = 'valid1_ids_gray
             # learning rate schduler -------------
             if LR is not None:
                 lr = LR.get_rate(i)
-                if lr<0 : break
-                adjust_learning_rate(optimizer, lr/iter_accum)
+                if lr > 0:
+                    adjust_learning_rate(optimizer, lr/iter_accum)
             rate = get_learning_rate(optimizer)*iter_accum
 
 

@@ -415,7 +415,7 @@ def ensemble_npy_to_csv(npy_dirs, csv_file):
 
 def submit_gray():
     out_dir = RESULTS_DIR + '/se_gray'
-    checkpoint = RESULTS_DIR + '/se_gray/checkpoint/00023000_0.3847_model.pth'
+    checkpoint = RESULTS_DIR + '/se_gray/checkpoint/00030000_0.3738_model.pth'
     run_submit(checkpoint, out_dir, 'test1_ids_gray2_53')
     #run_npy_to_sumbit_csv(out_dir+'/submit', 'gray_21500.csv', False)
     
@@ -430,10 +430,10 @@ def submit_color():
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
-    #submit_gray()
+    submit_gray()
     #submit_color()
     #run_npy_to_sumbit_csv(RESULTS_DIR + '/se_gray/submit', 'test1.csv', False)
-    ensemble_npy_to_csv([RESULTS_DIR + '/se_gray/npys/00021500', RESULTS_DIR + '/se_gray/npys/00022500', RESULTS_DIR + '/se_gray/npys/00023000'], 
-        RESULTS_DIR+'/se_gray/submit/ensemble.csv')
+    ensemble_npy_to_csv([RESULTS_DIR + '/se_gray/npys/00030000'], 
+        RESULTS_DIR+'/se_gray/submit/sub1_fix.csv')
 
     print('\nsucess!')
